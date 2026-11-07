@@ -16,8 +16,14 @@ RUN apk add --no-cache \
     coreutils \
     bash
 
-# 安装 Node.js 依赖，输出详细日志
-RUN npm install --omit=dev --loglevel=verbose
+RUN npm install --omit=dev --loglevel=verbose \
+      --logs-dir=/tmp/npm-build-logs \
+    || { \
+      status=$?; \
+      echo "===== npm debug logs ====="; \
+      cat /tmp/npm-build-logs/* 2>/dev/null || true; \
+      exit "$status"; \
+    }
 
 # 确认两个依赖均已安装，缺少时直接在构建阶段报错
 RUN node -e "require('axios'); require('adm-zip'); console.log('Dependencies OK')"
